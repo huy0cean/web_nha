@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tài khoản của tôi - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.9" />
+
+    <!-- PATCH căn giữa icon + cột Chi tiết (giữ nguyên cấu trúc cũ) -->
+    <style>
+      /* Căn giữa dọc cho toàn bộ ô bảng lịch sử */
+      .order-history-table th,
+      .order-history-table td {
+        vertical-align: middle;
+      }
+      /* Căn giữa ngang RIÊNG cột Chi tiết (cột cuối) */
+      .order-history-table th:last-child,
+      .order-history-table td:last-child {
+        text-align: center;
+        width: 110px; /* đủ chỗ cho nút */
+      }
+      /* Nút xem chi tiết: icon luôn ở giữa */
+      .btn-view-order {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #6c4df6;
+        border-radius: 10px;
+        background: #f3f1ff;
+        color: #6c4df6;
+        text-decoration: none;
+        line-height: 1; /* tránh lệch theo line-height */
+      }
+      .btn-view-order:hover {
+        background: #ece9ff;
+        color: #5a3cf0;
+        text-decoration: none;
+      }
+      .btn-view-order i {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <h2>Tài khoản của tôi</h2>
+
+        <div class="breadcrumbs">
+          <a href="index.html">Trang chủ</a> / <span>Tài khoản</span>
+        </div>
+
+        <div class="profile-container">
+          <div class="profile-section" id="user-info-section">
+            <div class="section-header">
+              <h3>Thông tin cá nhân</h3>
+              <button
+                class="btn btn-outline-primary btn-sm"
+                id="edit-profile-btn"
+              >
+                <i class="fas fa-edit"></i> Chỉnh sửa
+              </button>
+              <button
+                class="btn btn-primary btn-sm"
+                id="save-profile-btn"
+                style="display: none"
+              >
+                <i class="fas fa-save"></i> Lưu thay đổi
+              </button>
+              <button
+                class="btn btn-secondary btn-sm"
+                id="cancel-edit-btn"
+                style="display: none"
+              >
+                <i class="fas fa-times"></i> Hủy
+              </button>
+            </div>
+
+            <div id="view-mode">
+              <p>
+                <strong>Họ và tên:</strong>
+                <span data-field="full_name">Đang tải...</span>
+              </p>
+              <p>
+                <strong>Email:</strong>
+                <span data-field="email">Đang tải...</span>
+              </p>
+              <p>
+                <strong>Số điện thoại:</strong>
+                <span data-field="phone">Đang tải...</span>
+              </p>
+            </div>
+
+            <div id="edit-mode" style="display: none">
+              <div class="form-group">
+                <label for="edit-fullname">Họ và tên</label>
+                <input type="text" id="edit-fullname" name="full_name" />
+              </div>
+              <div class="form-group">
+                <label for="edit-email">Email (Không thể thay đổi)</label>
+                <input type="email" id="edit-email" name="email" disabled />
+              </div>
+              <div class="form-group">
+                <label for="edit-phone">Số điện thoại</label>
+                <input type="tel" id="edit-phone" name="phone" />
+              </div>
+              <p id="profile-edit-message" class="form-message"></p>
+            </div>
+          </div>
+
+          <div class="profile-section" id="order-history-section">
+            <h3>Lịch sử đơn hàng</h3>
+            <div id="order-history-list">
+              <p>Đang tải lịch sử đơn hàng...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+      // Hàm chạy khi trang profile tải xong
+      async function initProfilePage() {
+        console.log("Đang khởi tạo trang tài khoản...");
+        await loadOrderHistory();
+        await loadCategoriesDropdown();
+        checkAuthStatus(true); // Gọi checkAuthStatus với cờ isProfilePage = true
+        attachProfileEditEvents(); // Gắn sự kiện cho các nút sửa/lưu/hủy
+      }
+
+      // Hàm gắn sự kiện cho nút sửa/lưu/hủy
+      function attachProfileEditEvents() {
+        const editBtn = document.getElementById("edit-profile-btn");
+        const saveBtn = document.getElementById("save-profile-btn");
+        const cancelBtn = document.getElementById("cancel-edit-btn");
+        const viewModeDiv = document.getElementById("view-mode");
+        const editModeDiv = document.getElementById("edit-mode");
+        const editMessageP = document.getElementById("profile-edit-message");
+
+        if (!editBtn || !saveBtn || !cancelBtn || !viewModeDiv || !editModeDiv)
+          return;
+
+        // --- Khi nhấn nút "Chỉnh sửa" ---
+        editBtn.addEventListener("click", () => {
+          const currentName = viewModeDiv.querySelector(
+            'span[data-field="full_name"]'
+          ).textContent;
+          const currentEmail = viewModeDiv.querySelector(
+            'span[data-field="email"]'
+          ).textContent;
+          const currentPhone = viewModeDiv.querySelector(
+            'span[data-field="phone"]'
+          ).textContent;
+
+          editModeDiv.querySelector("#edit-fullname").value =
+            currentName === "Chưa cập nhật" ? "" : currentName;
+          editModeDiv.querySelector("#edit-email").value = currentEmail; // Email không sửa
+          editModeDiv.querySelector("#edit-phone").value =
+            currentPhone === "Chưa cập nhật" ? "" : currentPhone;
+
+          viewModeDiv.style.display = "none";
+          editModeDiv.style.display = "block";
+          editBtn.style.display = "none";
+          saveBtn.style.display = "inline-block";
+          cancelBtn.style.display = "inline-block";
+          editMessageP.textContent = "";
+        });
+
+        // --- Khi nhấn nút "Hủy" ---
+        cancelBtn.addEventListener("click", () => {
+          viewModeDiv.style.display = "block";
+          editModeDiv.style.display = "none";
+          editBtn.style.display = "inline-block";
+          saveBtn.style.display = "none";
+          cancelBtn.style.display = "none";
+        });
+
+        // --- Khi nhấn nút "Lưu thay đổi" ---
+        saveBtn.addEventListener("click", async () => {
+          const newName = editModeDiv
+            .querySelector("#edit-fullname")
+            .value.trim();
+          const newPhone = editModeDiv
+            .querySelector("#edit-phone")
+            .value.trim();
+          editMessageP.textContent = "Đang lưu...";
+          editMessageP.style.color = "blue";
+
+          try {
+            const response = await apiFetch(
+              `${API_URL}/users.php?action=update_profile`,
+              {
+                method: "POST",
+                body: {
+                  full_name: newName,
+                  phone: newPhone,
+                },
+              }
+            );
+            const result = await response.json();
+
+            if (result.status === "success") {
+              editMessageP.textContent = "Cập nhật thành công!";
+              editMessageP.style.color = "green";
+
+              viewModeDiv.querySelector(
+                'span[data-field="full_name"]'
+              ).textContent = newName || "Chưa cập nhật";
+              viewModeDiv.querySelector(
+                'span[data-field="phone"]'
+              ).textContent = newPhone || "Chưa cập nhật";
+
+              setTimeout(() => {
+                viewModeDiv.style.display = "block";
+                editModeDiv.style.display = "none";
+                editBtn.style.display = "inline-block";
+                saveBtn.style.display = "none";
+                cancelBtn.style.display = "none";
+              }, 1500);
+
+              const userDisplayName =
+                document.getElementById("user-display-name");
+              if (userDisplayName)
+                userDisplayName.textContent =
+                  newName ||
+                  viewModeDiv.querySelector('span[data-field="email"]')
+                    .textContent;
+            } else {
+              editMessageP.textContent = `Lỗi: ${result.message}`;
+              editMessageP.style.color = "red";
+            }
+          } catch (error) {
+            console.error("Lỗi khi cập nhật profile:", error);
+            editMessageP.textContent = "Lỗi kết nối. Vui lòng thử lại.";
+            editMessageP.style.color = "red";
+          }
+        });
+      }
+
+      // Hàm tải thông tin user (được gọi bởi checkAuthStatus)
+      async function loadUserInfo() {
+        const viewModeDiv = document.getElementById("view-mode");
+        // Chỉ lấy dữ liệu nếu đang hiển thị "Đang tải..."
+        if (!viewModeDiv || !viewModeDiv.innerHTML.includes("Đang tải..."))
+          return;
+
+        try {
+          // API check đã được gọi trong checkAuthStatus, lấy dữ liệu từ đó
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+
+          if (result.status === "success" && result.user) {
+            viewModeDiv.querySelector(
+              'span[data-field="full_name"]'
+            ).textContent = result.user.full_name || "Chưa cập nhật";
+            viewModeDiv.querySelector('span[data-field="email"]').textContent =
+              result.user.email || "N/A";
+            viewModeDiv.querySelector('span[data-field="phone"]').textContent =
+              result.user.phone || "Chưa cập nhật";
+          } else {
+            // Lỗi này không nên xảy ra vì checkAuthStatus đã kiểm tra
+            redirectToLogin("Không thể tải thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error(
+            "Lỗi khi tải thông tin user trong loadUserInfo:",
+            error
+          );
+          viewModeDiv.innerHTML =
+            '<p class="error-message">Lỗi tải thông tin. Vui lòng thử lại.</p>';
+        }
+      }
+
+      // Hàm gọi API lấy lịch sử đơn hàng
+      async function loadOrderHistory() {
+        const orderListDiv = document.getElementById("order-history-list");
+        if (!orderListDiv) return;
+
+        try {
+          const response = await apiFetch(`${API_URL}/orders.php?action=list`);
+          const result = await response.json();
+
+          if (result.status === "success") {
+            renderOrderHistory(result.data, orderListDiv);
+          } else if (response.status === 401) {
+            // Lỗi này không nên xảy ra vì checkAuthStatus đã kiểm tra
+            redirectToLogin("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+          } else {
+            orderListDiv.innerHTML = `<p class="error-message">Lỗi tải lịch sử đơn hàng: ${result.message}</p>`;
+          }
+        } catch (error) {
+          console.error("Fetch error (Order History):", error);
+          orderListDiv.innerHTML = `<p class="error-message">Không thể tải lịch sử đơn hàng. Vui lòng thử lại sau.</p>`;
+        }
+      }
+
+      // Hàm render lịch sử đơn hàng ra HTML
+      function renderOrderHistory(orders, container) {
+        if (!container) return;
+        if (!orders || orders.length === 0) {
+          container.innerHTML = "<p>Bạn chưa có đơn hàng nào.</p>";
+          return;
+        }
+        let tableHtml = `
+          <table class="order-history-table">
+            <thead>
+              <tr>
+                <th>Mã đơn hàng</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        orders.forEach((order) => {
+          const orderDate = new Date(order.created_at).toLocaleDateString(
+            "vi-VN"
+          );
+          let statusText = order.status;
+          switch (order.status) {
+            case "pending":
+              statusText = "Chờ xác nhận";
+              break;
+            case "confirmed":
+              statusText = "Đã xác nhận";
+              break;
+            case "shipping":
+              statusText = "Đang giao";
+              break;
+            case "completed":
+              statusText = "Đã giao";
+              break;
+            case "cancelled":
+              statusText = "Đã hủy";
+              break;
+          }
+          tableHtml += `
+            <tr>
+              <td data-label="Mã ĐH">${order.order_code}</td>
+              <td data-label="Ngày đặt">${orderDate}</td>
+              <td data-label="Tổng tiền">${formatCurrency(
+                order.total_amount
+              )}</td>
+              <td data-label="Trạng thái">
+                <span class="order-status status-${
+                  order.status
+                }">${statusText}</span>
+              </td>
+              <td data-label="Chi tiết">
+                <!-- GIỮ ĐÚNG cấu trúc cũ: điều hướng tới order-detail.html?id=... -->
+                <a href="order-detail.html?id=${
+                  order.id
+                }" class="btn-view-order" title="Xem chi tiết">
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                </a>
+              </td>
+            </tr>
+          `;
+        });
+        tableHtml += `</tbody></table>`;
+        container.innerHTML = tableHtml;
+      }
+
+      // Hàm chuyển hướng về login
+      function redirectToLogin(message = "Vui lòng đăng nhập.") {
+        alert(message);
+        window.location.href = "login.html";
+      }
+
+      // --- Các hàm copy từ index.html ---
+      async function loadCategoriesDropdown() {
+        const dropdownContent = document.getElementById("category-dropdown");
+        if (!dropdownContent) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          loadCategoriesDropdown();
+          return;
+        }
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            dropdownContent.innerHTML = "";
+            result.data.forEach((category) => {
+              const link = document.createElement("a");
+              link.href = `products.html?category_id=${category.id}`;
+              link.textContent = category.name;
+              dropdownContent.appendChild(link);
+            });
+          } else {
+            dropdownContent.innerHTML =
+              '<a href="#">Không có danh mục nào.</a>';
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải danh mục:", error);
+          dropdownContent.innerHTML = '<a href="#">Lỗi tải danh mục.</a>';
+        }
+      }
+      async function checkAuthStatus(isProfilePage = false) {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+        if (!authLink || !userMenu) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          checkAuthStatus(isProfilePage);
+          return;
+        }
+
+        try {
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          // Đợi các element trong user-menu render xong
+          if (!userDisplayName || !logoutButton) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            checkAuthStatus(isProfilePage); // Gọi lại
+            return;
+          }
+
+          if (result.status === "success" && result.user) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              result.user.full_name || result.user.email;
+            if (logoutButton && !logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+            if (isProfilePage) {
+              loadUserInfo(); // Gọi loadUserInfo để điền data
+            }
+          } else {
+            redirectToLogin();
+          }
+        } catch (error) {
+          console.error("Lỗi khi kiểm tra trạng thái đăng nhập:", error);
+          redirectToLogin("Lỗi kiểm tra đăng nhập. Vui lòng đăng nhập lại.");
+        }
+      }
+      async function handleLogout(e) {
+        e.preventDefault();
+        try {
+          const logoutResponse = await apiFetch(
+            `${API_URL}/auth.php?action=logout`,
+            { method: "POST" }
+          );
+          const logoutResult = await logoutResponse.json();
+          if (logoutResult.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.href = "index.html";
+          } else {
+            alert("Đăng xuất thất bại: " + logoutResult.message);
+          }
+        } catch (error) {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      // Chạy hàm init khi trang tải xong
+      document.addEventListener("DOMContentLoaded", initProfilePage);
+    </script>
+  </body>
+</html>

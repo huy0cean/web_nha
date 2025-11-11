@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog - Tin tức sức khỏe - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.12" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <h2>Blog - Tin tức sức khỏe</h2>
+
+        <div class="breadcrumbs">
+          <a href="index.html">Trang chủ</a> / <span>Blog</span>
+        </div>
+
+        <div id="blog-posts-grid" class="posts-grid blog-page-grid">
+          <p class="text-center">Đang tải bài viết...</p>
+        </div>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+      // Hàm chạy khi trang blog tải xong
+      async function initBlogPage() {
+        console.log("Đang khởi tạo trang blog...");
+        await loadBlogPosts();
+        await loadCategoriesDropdown(); // <-- ĐÃ BỔ SUNG
+        checkAuthStatus(); // <-- ĐÃ BỔ SUNG
+      }
+
+      // Hàm gọi API lấy danh sách bài viết (ví dụ lấy 5 bài)
+      async function loadBlogPosts() {
+        const grid = document.getElementById("blog-posts-grid");
+        if (!grid) return;
+        try {
+          // Gọi API lấy 5 bài viết
+          const response = await apiFetch(
+            `${API_URL}/posts.php?action=list&limit=5`
+          );
+          const result = await response.json();
+
+          if (result.status === "success") {
+            renderPosts(result.data, grid); // Dùng lại hàm render chung
+          } else {
+            grid.innerHTML =
+              '<p class="error-message text-center">Chưa có bài viết nào.</p>';
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải bài viết:", error);
+          grid.innerHTML =
+            '<p class="error-message text-center">Không thể tải bài viết.</p>';
+        }
+      }
+
+      // --- HÀM RENDER POSTS (Copy từ index.html) ---
+      function renderPosts(posts, gridElement) {
+        gridElement.innerHTML = "";
+        if (!posts || posts.length === 0) {
+          gridElement.innerHTML =
+            '<p style="text-align: center;">Không tìm thấy bài viết nào.</p>';
+          return;
+        }
+        posts.forEach((post) => {
+          const postCard = document.createElement("div");
+          postCard.className = "post-card";
+          let postImagePath = post.image;
+          if (
+            postImagePath &&
+            typeof postImagePath === "string" &&
+            !postImagePath.startsWith("posts/")
+          ) {
+            postImagePath = "posts/" + postImagePath;
+          } else if (!postImagePath) {
+            postImagePath = "placeholder.jpg";
+          }
+          const postImageSrc = `../uploads/${postImagePath}`;
+          // Sử dụng excerpt HOẶC content nếu excerpt rỗng
+          let shortExcerpt = post.excerpt
+            ? post.excerpt
+            : post.content
+            ? post.content
+            : "";
+          shortExcerpt =
+            shortExcerpt.length > 120
+              ? shortExcerpt.substring(0, 120) + "..."
+              : shortExcerpt;
+
+          const postDate = new Date(post.created_at).toLocaleDateString(
+            "vi-VN"
+          );
+
+          postCard.innerHTML = `
+                    <a href="post-detail.html?slug=${
+                      post.slug
+                    }" class="post-image-link">
+                        <img src="${postImageSrc}" alt="${
+            post.title
+          }" onerror="this.onerror=null; this.src='../uploads/placeholder.jpg'; this.style.objectFit='cover';">
+                    </a>
+                    <div class="post-content">
+                        <p class="post-date"><i class="fas fa-calendar-alt"></i> ${postDate}</p>
+                        <h3><a href="post-detail.html?slug=${post.slug}">${
+            post.title
+          }</a></h3>
+                        <p class="post-excerpt">${shortExcerpt.replace(
+                          /\n/g,
+                          " "
+                        )}</p>
+                        <a href="post-detail.html?slug=${
+                          post.slug
+                        }" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                `;
+          gridElement.appendChild(postCard);
+        });
+      }
+
+      // --- CÁC HÀM HỖ TRỢ (Copy từ các trang khác) ---
+
+      function redirectToLogin(message = "Vui lòng đăng nhập.") {
+        alert(message);
+        window.location.href = "login.html";
+      }
+
+      async function loadCategoriesDropdown() {
+        const dropdownContent = document.getElementById("category-dropdown");
+        if (!dropdownContent) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          loadCategoriesDropdown();
+          return;
+        }
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            dropdownContent.innerHTML = "";
+            result.data.forEach((category) => {
+              const link = document.createElement("a");
+              link.href = `products.html?category_id=${category.id}`;
+              link.textContent = category.name;
+              dropdownContent.appendChild(link);
+            });
+          } else {
+            dropdownContent.innerHTML =
+              '<a href="#">Không có danh mục nào.</a>';
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải danh mục:", error);
+          dropdownContent.innerHTML = '<a href="#">Lỗi tải danh mục.</a>';
+        }
+      }
+
+      async function checkAuthStatus() {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+        if (!authLink || !userMenu) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          checkAuthStatus();
+          return;
+        }
+        try {
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          if (!userDisplayName || !logoutButton) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            checkAuthStatus();
+            return;
+          }
+
+          if (result.status === "success" && result.user) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              result.user.full_name || result.user.email;
+            if (logoutButton && !logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+          } else {
+            authLink.style.display = "flex";
+            userMenu.style.display = "none";
+          }
+        } catch (error) {
+          console.error("Lỗi khi kiểm tra trạng thái đăng nhập:", error);
+          authLink.style.display = "flex";
+          userMenu.style.display = "none";
+        }
+      }
+
+      async function handleLogout(e) {
+        e.preventDefault();
+        try {
+          const logoutResponse = await apiFetch(
+            `${API_URL}/auth.php?action=logout`,
+            { method: "POST" }
+          );
+          const logoutResult = await logoutResponse.json();
+          if (logoutResult.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.href = "index.html";
+          } else {
+            alert("Đăng xuất thất bại: " + logoutResult.message);
+          }
+        } catch (error) {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      // Chạy hàm init khi trang tải xong
+      document.addEventListener("DOMContentLoaded", initBlogPage);
+    </script>
+  </body>
+</html>

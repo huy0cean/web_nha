@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Bài viết - Admin</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../assets/css/admin.css?v=1.2" />
+  </head>
+  <body class="admin-dashboard">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <a href="index.html"
+          ><i class="fas fa-pills"></i><span> Nhà Thuốc GB</span></a
+        >
+      </div>
+      <ul class="admin-nav">
+        <li>
+          <a href="index.html"
+            ><i class="fas fa-tachometer-alt"></i> Tổng quan</a
+          >
+        </li>
+        <li>
+          <a href="products.html"
+            ><i class="fas fa-box-open"></i> Quản lý Sản phẩm</a
+          >
+        </li>
+        <li>
+          <a href="orders.html"
+            ><i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng</a
+          >
+        </li>
+        <li>
+          <a href="categories.html"
+            ><i class="fas fa-tags"></i> Quản lý Danh mục</a
+          >
+        </li>
+        <li>
+          <a href="posts.html" class="active"
+            ><i class="fas fa-newspaper"></i> Quản lý Bài viết</a
+          >
+        </li>
+        <li>
+          <a href="users.html"
+            ><i class="fas fa-users"></i> Quản lý Người dùng</a
+          >
+        </li>
+      </ul>
+      <div class="admin-user-info" id="admin-sidebar-user">
+        <p>Đang tải...</p>
+      </div>
+    </aside>
+
+    <main class="admin-main-content" id="admin-posts-manager">
+      <div class="admin-page-header">
+        <h1>Quản lý Bài viết</h1>
+        <button class="btn btn-primary" id="btn-add-new-post">
+          <i class="fas fa-plus"></i> Thêm bài viết mới
+        </button>
+      </div>
+
+      <div class="admin-table-container">
+        <table class="admin-table" id="posts-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ảnh</th>
+              <th>Tiêu đề</th>
+              <th>Slug</th>
+              <th>Trạng thái</th>
+              <th>Ngày tạo</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="posts-table-body">
+            <tr>
+              <td colspan="7" class="text-center">Đang tải danh sách...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="post-modal" class="admin-modal" style="display: none">
+        <div class="modal-content">
+          <span class="modal-close" id="modal-close-btn">&times;</span>
+          <h2 id="modal-title">Thêm bài viết mới</h2>
+          <form id="post-form" enctype="multipart/form-data">
+            <input type="hidden" id="post_id" name="id" />
+
+            <div class="form-group">
+              <label for="post_title"
+                >Tiêu đề <span class="required">*</span></label
+              >
+              <input type="text" id="post_title" name="title" required />
+            </div>
+            <div class="form-group">
+              <label for="post_slug"
+                >Slug (URL) <span class="required">*</span></label
+              >
+              <input type="text" id="post_slug" name="slug" required />
+            </div>
+
+            <div class="form-group">
+              <label for="post_excerpt">Mô tả ngắn (Excerpt)</label>
+              <textarea id="post_excerpt" name="excerpt" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="post_content"
+                >Nội dung <span class="required">*</span></label
+              >
+              <textarea
+                id="post_content"
+                name="content"
+                rows="10"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="post_image"
+                >Ảnh đại diện (Để trống nếu không muốn đổi)</label
+              >
+              <input
+                type="file"
+                id="post_image"
+                name="image"
+                accept="image/png, image/jpeg, image/webp, image/avif, image/gif"
+              />
+              <div id="image-preview-container">
+                <img
+                  id="image-preview"
+                  src=""
+                  alt="Xem trước ảnh"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="post_status"
+                >Trạng thái <span class="required">*</span></label
+              >
+              <select id="post_status" name="status" required>
+                <option value="published" selected>Published (Hiển thị)</option>
+                <option value="draft">Draft (Bản nháp)</option>
+              </select>
+            </div>
+
+            <p id="post-form-message" class="form-message"></p>
+            <button type="submit" class="btn btn-primary btn-full">
+              Lưu bài viết
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
+    <script src="../assets/js/admin_posts.js"></script>
+  </body>
+</html>

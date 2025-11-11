@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đang tải bài viết... - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.12" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container post-detail-page-container">
+        <div class="breadcrumbs" id="post-breadcrumbs">
+          <a href="index.html">Trang chủ</a> / <a href="blog.html">Blog</a> /
+          <span>Đang tải...</span>
+        </div>
+
+        <article class="post-detail-content" id="post-content-area">
+          <p class="text-center">Đang tải nội dung bài viết...</p>
+        </article>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+      // Hàm chạy khi trang chi tiết bài viết tải xong
+      async function initPostDetailPage() {
+        console.log("Đang khởi tạo trang chi tiết bài viết...");
+        const urlParams = new URLSearchParams(window.location.search);
+        const postSlug = urlParams.get("slug");
+
+        if (!postSlug) {
+          document.getElementById("post-content-area").innerHTML =
+            '<p class="error-message text-center">Lỗi: Không tìm thấy slug bài viết trong URL.</p>';
+          document.title = "Lỗi - Nhà Thuốc GB";
+          return;
+        }
+
+        await loadPostDetail(postSlug);
+        await loadCategoriesDropdown();
+        checkAuthStatus();
+      }
+
+      // Hàm gọi API lấy chi tiết bài viết
+      async function loadPostDetail(slug) {
+        const articleElement = document.getElementById("post-content-area");
+        const breadcrumbsSpan = document.querySelector(
+          "#post-breadcrumbs span"
+        );
+        if (!articleElement || !breadcrumbsSpan) return;
+
+        try {
+          const response = await apiFetch(
+            `${API_URL}/posts.php?action=detail&slug=${slug}`
+          );
+          const result = await response.json();
+
+          if (result.status === "success" && result.data) {
+            renderPostDetail(result.data, articleElement);
+            document.title = `${result.data.title} - Nhà Thuốc GB`;
+            breadcrumbsSpan.textContent = result.data.title;
+          } else {
+            articleElement.innerHTML = `<p class="error-message text-center">Lỗi: ${
+              result.message || "Không tìm thấy bài viết."
+            }</p>`;
+            document.title = "Không tìm thấy bài viết - Nhà Thuốc GB";
+            breadcrumbsSpan.textContent = "Không tìm thấy";
+          }
+        } catch (error) {
+          console.error("Fetch error (Post Detail):", error);
+          articleElement.innerHTML = `<p class="error-message text-center">Không thể tải nội dung bài viết. Vui lòng thử lại sau.</p>`;
+          document.title = "Lỗi tải bài viết - Nhà Thuốc GB";
+          breadcrumbsSpan.textContent = "Lỗi";
+        }
+      }
+
+      // *** HÀM RENDER ĐÃ SỬA LỖI MARKDOWN ***
+      function renderPostDetail(post, container) {
+        if (!container) return;
+
+        let postImagePath = post.image;
+        if (
+          postImagePath &&
+          typeof postImagePath === "string" &&
+          !postImagePath.startsWith("posts/")
+        ) {
+          postImagePath = "posts/" + postImagePath;
+        } else if (!postImagePath) {
+          postImagePath = null;
+        }
+        const postImageSrc = postImagePath
+          ? `../uploads/${postImagePath}`
+          : null;
+
+        const postDate = new Date(post.created_at).toLocaleString("vi-VN");
+
+        // Xử lý Markdown đơn giản
+        let contentBody = "<p>Nội dung đang được cập nhật.</p>";
+        if (post.content) {
+          contentBody = post.content
+            .replace(/^### (.*)$/gm, "<h3>$1</h3>") // Dòng bắt đầu bằng ### -> <h3>
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Chữ **in đậm** -> <strong>
+            .replace(/^\* (.*)$/gm, "<ul><li>$1</li></ul>") // Dòng bắt đầu bằng * (Tạo list)
+            .replace(/<\/ul>\n<ul><li>/g, "<li>") // Nối các list liền kề
+            .replace(/<\/ul><br><ul><li>/g, "<li>") // Nối các list liền kề (cho Windows)
+            .replace(/\n/g, "<br>") // Xuống dòng
+            .replace(/<br><br>/g, "</p><p>") // Tạo khoảng cách đoạn
+            .replace(/<br><h3>/g, "<h3>") // Xóa <br> thừa trước h3
+            .replace(/<\/h3><br>/g, "</h3>"); // Xóa <br> thừa sau h3
+
+          // Bọc đoạn đầu tiên vào thẻ <p> nếu nó chưa phải là thẻ
+          if (!contentBody.startsWith("<")) {
+            contentBody = `<p>${contentBody}</p>`;
+          }
+          // Đóng thẻ <p> bị hở do replace
+          contentBody = contentBody.replace(/<\/p><p><\/p>/g, "");
+        }
+
+        container.innerHTML = `
+                <h1 class="post-title">${post.title}</h1>
+                <p class="post-meta">
+                    <span class="post-date"><i class="fas fa-calendar-alt"></i> ${postDate}</span>
+                </p>
+                ${
+                  postImageSrc
+                    ? `<img class="post-featured-image" src="${postImageSrc}" alt="${post.title}" onerror="this.onerror=null; this.style.display='none'">`
+                    : ""
+                }
+                <div class="post-body">
+                    ${contentBody}
+                </div>
+            `;
+      }
+      // *** HẾT HÀM SỬA ***
+
+      // --- Các hàm copy từ các file trước ---
+
+      function redirectToLogin(message = "Vui lòng đăng nhập.") {
+        alert(message);
+        window.location.href = "login.html";
+      }
+
+      async function loadCategoriesDropdown() {
+        const dropdownContent = document.getElementById("category-dropdown");
+        if (!dropdownContent) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          loadCategoriesDropdown();
+          return;
+        }
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            dropdownContent.innerHTML = "";
+            result.data.forEach((category) => {
+              const link = document.createElement("a");
+              link.href = `products.html?category_id=${category.id}`;
+              link.textContent = category.name;
+              dropdownContent.appendChild(link);
+            });
+          } else {
+            dropdownContent.innerHTML =
+              '<a href="#">Không có danh mục nào.</a>';
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải danh mục:", error);
+          dropdownContent.innerHTML = '<a href="#">Lỗi tải danh mục.</a>';
+        }
+      }
+      async function checkAuthStatus() {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+        if (!authLink || !userMenu) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          checkAuthStatus();
+          return;
+        }
+        try {
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          if (!userDisplayName || !logoutButton) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            checkAuthStatus();
+            return;
+          }
+
+          if (result.status === "success" && result.user) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              result.user.full_name || result.user.email;
+            if (logoutButton && !logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+          } else {
+            authLink.style.display = "flex";
+            userMenu.style.display = "none";
+          }
+        } catch (error) {
+          console.error("Lỗi khi kiểm tra trạng thái đăng nhập:", error);
+          authLink.style.display = "flex";
+          userMenu.style.display = "none";
+        }
+      }
+      async function handleLogout(e) {
+        e.preventDefault();
+        try {
+          const logoutResponse = await apiFetch(
+            `${API_URL}/auth.php?action=logout`,
+            { method: "POST" }
+          );
+          const logoutResult = await logoutResponse.json();
+          if (logoutResult.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.href = "index.html";
+          } else {
+            alert("Đăng xuất thất bại: " + logoutResult.message);
+          }
+        } catch (error) {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      // Chạy hàm init khi trang tải xong
+      document.addEventListener("DOMContentLoaded", initPostDetailPage);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,688 @@
+/* frontend/assets/css/admin.css (Bản Hoàn Chỉnh - Sửa lỗi Modal bị cắt) */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+
+:root {
+  --primary-color: #5b45ea;
+  --secondary-color: #6c757d;
+  --accent-color: #28a745;
+  --text-color: #333;
+  --light-bg: #f8f9fa;
+  --dark-bg: #212529;
+  --border-color: #dee2e6;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--light-bg);
+}
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+}
+a:hover {
+  color: #4a37c0;
+}
+.text-center {
+  text-align: center !important;
+}
+.error-message {
+  color: red;
+}
+.required {
+  color: red;
+  margin-left: 3px;
+}
+
+/* ==================
+   TRANG ĐĂNG NHẬP ADMIN
+   ================== */
+.admin-login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+.auth-form {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+.auth-form h2 {
+  text-align: center;
+  color: var(--text-color);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.auth-form h2::after {
+  display: none;
+}
+.auth-form p {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--secondary-color);
+}
+.form-group {
+  margin-bottom: 1.25rem;
+}
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-primary {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: 1px solid var(--primary-color);
+}
+.btn-primary:hover {
+  background-color: #4a37c0;
+  border-color: #4a37c0;
+}
+.btn-outline-primary {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+.btn-full {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+}
+.form-message {
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  min-height: 1.2em;
+  color: red;
+}
+
+/* ==================
+   LAYOUT CHUNG TRANG ADMIN
+   ================== */
+body.admin-dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+.admin-sidebar {
+  width: 260px;
+  background-color: var(--dark-bg);
+  color: #fff;
+  padding: 1.5rem 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.admin-sidebar-header {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+.admin-sidebar-header a {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+}
+.admin-sidebar-header a i {
+  color: var(--primary-color);
+  margin-right: 0.5rem;
+}
+.admin-nav {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  flex-grow: 1;
+}
+.admin-nav li a {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 500;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+.admin-nav li a:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+.admin-nav li a.active {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+}
+.admin-nav li a i {
+  margin-right: 0.75rem;
+  width: 20px;
+  text-align: center;
+}
+.admin-user-info {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+}
+.admin-user-info p {
+  margin: 0 0 0.5rem 0;
+  color: #ccc;
+}
+.admin-user-info p strong {
+  color: #fff;
+}
+.admin-user-info a {
+  color: #ffc107;
+  text-decoration: none;
+  font-weight: 500;
+}
+.admin-user-info a:hover {
+  text-decoration: underline;
+}
+.admin-main-content {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+.admin-main-content h1 {
+  font-size: 2rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+}
+.admin-main-content h1::after {
+  display: none;
+}
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================
+   CSS TRANG QUẢN LÝ
+   ================== */
+.admin-table-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-table th,
+.admin-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+.admin-table th {
+  background-color: var(--light-bg);
+  font-weight: 500;
+  color: var(--secondary-color);
+  white-space: nowrap;
+}
+.admin-table td {
+  color: var(--text-color);
+}
+.admin-table td .product-image-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: #fdfdfd;
+}
+.admin-table td .status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.admin-table td .status-dot.active {
+  background-color: var(--accent-color);
+}
+.admin-table td .status-dot.inactive {
+  background-color: var(--secondary-color);
+}
+.admin-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+.btn-edit {
+  color: var(--primary-color);
+}
+.btn-delete {
+  color: #dc3545;
+}
+.btn-edit,
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+}
+.btn-edit:hover {
+  color: #4a37c0;
+}
+.btn-delete:hover {
+  color: #a71d2a;
+}
+.order-status {
+  padding: 0.25rem 0.6rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  display: inline-block;
+}
+.order-status.status-pending {
+  background-color: #ffc107;
+  color: #333;
+}
+.order-status.status-confirmed {
+  background-color: #17a2b8;
+}
+.order-status.status-shipping {
+  background-color: #007bff;
+}
+.order-status.status-completed {
+  background-color: var(--accent-color);
+}
+.order-status.status-cancelled {
+  background-color: var(--secondary-color);
+}
+
+/* ==================
+   MODAL (POPUP) - ĐÃ SỬA LỖI BỊ CẮT (FIXED)
+   ================== */
+.admin-modal {
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto; /* Cho phép cuộn KHI NỘI DUNG DÀI */
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 3rem 1rem; /* Tạo khoảng hở trên/dưới/trái/phải */
+  box-sizing: border-box;
+  display: flex; /* Kích hoạt Flexbox */
+  justify-content: center; /* Căn giữa modal theo chiều ngang */
+  align-items: flex-start; /* Căn modal lên trên cùng (để padding-top 3rem có tác dụng) */
+}
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 700px;
+  position: relative;
+  animation: modalFadeIn 0.3s ease-out;
+  margin: 0; /* Bỏ margin: auto cũ, flex sẽ tự căn giữa ngang */
+  /* margin-bottom: 3rem; <-- Bị thay thế bởi padding: 3rem của cha */
+}
+/* HẾT SỬA LỖI MODAL */
+
+@keyframes modalFadeIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: var(--secondary-color);
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.modal-close:hover {
+  color: var(--text-color);
+}
+/* Đặt chiều rộng nhỏ hơn cho modal danh mục */
+#category-modal .modal-content {
+  max-width: 500px;
+}
+#category-modal #modal-title {
+  text-align: center;
+  font-size: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+#category-modal #category-form {
+  padding: 1.5rem 2rem 2rem 2rem;
+}
+
+/* FORM BÊN TRONG MODAL */
+#product-form,
+#category-form {
+  padding: 2rem 2.5rem;
+}
+#product-form h2,
+#category-form h2 {
+  text-align: left;
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+#product-form .form-group,
+#category-form .form-group {
+  margin-bottom: 1.25rem;
+}
+#product-form .form-group label,
+#category-form .form-group label {
+  font-weight: 500;
+}
+#product-form .form-group input,
+#product-form .form-group textarea,
+#product-form .form-group select,
+#category-form .form-group input,
+#category-form .form-group textarea,
+#category-form .form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+#product-form textarea,
+#category-form textarea {
+  resize: vertical;
+}
+#image-preview-container {
+  margin-top: 1rem;
+}
+#image-preview {
+  max-width: 100px;
+  max-height: 100px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  object-fit: contain;
+}
+.form-group-checkbox-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+}
+.form-group-checkbox input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+.form-group-checkbox label {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+.address-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* CSS CHI TIẾT ĐƠN HÀNG (Admin) */
+.admin-order-detail-container {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-top: 1.5rem;
+}
+.order-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.order-summary-header p {
+  margin: 0.3rem 0;
+  font-size: 0.95rem;
+}
+.order-summary-header strong {
+  color: var(--text-color);
+}
+.order-summary-header .order-status {
+  display: inline-block;
+}
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.order-section h4 {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+.order-section p {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0.6rem;
+  line-height: 1.7;
+}
+.order-section p strong {
+  color: var(--text-color);
+  min-width: 110px;
+  display: inline-block;
+}
+.order-grand-total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+.order-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.order-items-table th,
+.order-items-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+.order-items-table th {
+  background-color: var(--light-bg);
+  font-weight: 500;
+  color: var(--secondary-color);
+}
+.order-items-table td.product-info {
+  display: flex;
+  align-items: center;
+}
+.order-items-table td.product-info img {
+  margin-right: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+.order-items-table td.product-info span {
+  font-weight: 500;
+  color: var(--text-color);
+}
+.order-items-table td:last-child {
+  font-weight: bold;
+}
+.order-actions {
+  margin-top: 2rem;
+  text-align: right;
+}
+.status-update-form {
+  padding: 1.5rem;
+  background-color: var(--light-bg);
+  border-radius: 8px;
+}
+.status-update-form .form-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+.status-update-form label {
+  margin-bottom: 0;
+}
+.status-update-form select {
+  width: auto;
+  min-width: 200px;
+}
+
+/* Responsive cho Admin */
+@media (max-width: 992px) {
+  .admin-sidebar {
+    position: fixed;
+    left: -260px;
+    height: 100%;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  .admin-sidebar.open {
+    left: 0;
+  }
+  .admin-main-content {
+    padding: 1.5rem;
+  }
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .admin-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .address-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .address-row .form-group:first-child {
+    margin-bottom: 1.25rem;
+  }
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .order-summary-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .order-summary-header div:last-child {
+    margin-top: 0.5rem;
+  }
+  .order-items-table thead {
+    display: none;
+  }
+  .order-items-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    padding: 0.8rem;
+    border-radius: 5px;
+  }
+  .order-items-table tbody td {
+    display: block;
+    text-align: right;
+    padding: 0.4rem 0;
+    border-bottom: none;
+    position: relative;
+  }
+  .order-items-table tbody td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+  }
+  .order-items-table td:nth-of-type(1)::before {
+    content: "Sản phẩm";
+  }
+  .order-items-table td:nth-of-type(2)::before {
+    content: "Đơn giá";
+  }
+  .order-items-table td:nth-of-type(3)::before {
+    content: "Số lượng";
+  }
+  .order-items-table td:nth-of-type(4)::before {
+    content: "Thành tiền";
+  }
+  .order-items-table td.product-info {
+    text-align: left;
+    padding-bottom: 0.5rem;
+  }
+  .order-items-table td.product-info::before {
+    display: none;
+  }
+  .order-items-table td.product-info img {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.5rem;
+  }
+  .order-actions {
+    text-align: center;
+  }
+}

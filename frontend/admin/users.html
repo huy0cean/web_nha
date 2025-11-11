@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Người dùng - Admin</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../assets/css/admin.css?v=1.4" />
+  </head>
+  <body class="admin-dashboard">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <a href="index.html"
+          ><i class="fas fa-pills"></i><span> Nhà Thuốc GB</span></a
+        >
+      </div>
+      <ul class="admin-nav">
+        <li>
+          <a href="index.html"
+            ><i class="fas fa-tachometer-alt"></i> Tổng quan</a
+          >
+        </li>
+        <li>
+          <a href="products.html"
+            ><i class="fas fa-box-open"></i> Quản lý Sản phẩm</a
+          >
+        </li>
+        <li>
+          <a href="orders.html"
+            ><i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng</a
+          >
+        </li>
+        <li>
+          <a href="categories.html"
+            ><i class="fas fa-tags"></i> Quản lý Danh mục</a
+          >
+        </li>
+        <li>
+          <a href="posts.html"
+            ><i class="fas fa-newspaper"></i> Quản lý Bài viết</a
+          >
+        </li>
+        <li>
+          <a href="users.html" class="active"
+            ><i class="fas fa-users"></i> Quản lý Người dùng</a
+          >
+        </li>
+      </ul>
+      <div class="admin-user-info" id="admin-sidebar-user">
+        <p>Đang tải...</p>
+      </div>
+    </aside>
+
+    <main class="admin-main-content" id="admin-users-manager">
+      <div class="admin-page-header">
+        <h1>Quản lý Người dùng</h1>
+      </div>
+
+      <div class="admin-table-container">
+        <table class="admin-table" id="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Họ và tên</th>
+              <th>Email</th>
+              <th>SĐT</th>
+              <th>Quyền</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr>
+              <td colspan="7" class="text-center">Đang tải danh sách...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="user-modal" class="admin-modal" style="display: none">
+        <div class="modal-content">
+          <span class="modal-close" id="modal-close-btn">&times;</span>
+          <form id="user-form">
+            <h2 id="modal-title">Sửa thông tin người dùng</h2>
+            <input type="hidden" id="user_id" name="id" />
+
+            <div class="form-group">
+              <label for="user_email">Email</label>
+              <input type="email" id="user_email" name="email" disabled />
+            </div>
+            <div class="form-group">
+              <label for="user_fullname">Họ và tên</label>
+              <input type="text" id="user_fullname" name="full_name" disabled />
+            </div>
+
+            <div class="address-row">
+              <div class="form-group">
+                <label for="user_role"
+                  >Quyền <span class="required">*</span></label
+                >
+                <select id="user_role" name="role" required>
+                  <option value="customer">Customer (Khách hàng)</option>
+                  <option value="admin">Admin (Quản trị)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="user_status"
+                  >Trạng thái <span class="required">*</span></label
+                >
+                <select id="user_status" name="status" required>
+                  <option value="1">Active (Hoạt động)</option>
+                  <option value="0">Locked (Đã khóa)</option>
+                </select>
+              </div>
+            </div>
+
+            <p id="user-form-message" class="form-message"></p>
+
+            <button type="submit" class="btn btn-primary btn-full">
+              Lưu thay đổi
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
+    <script src="../assets/js/admin_users.js"></script>
+  </body>
+</html>

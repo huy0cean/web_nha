@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sản phẩm - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.3" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <h2 id="page-title">Tất cả Sản phẩm</h2>
+
+        <div id="products-list-grid" class="product-grid">
+          <p>Đang tải sản phẩm...</p>
+        </div>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+      // Hàm chạy khi trang tải xong
+      async function initProductsPage() {
+        console.log("Đang khởi tạo trang sản phẩm...");
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryId = urlParams.get("category_id"); // Lấy category_id từ URL
+
+        await loadProducts(categoryId); // Tải sản phẩm (có thể theo category)
+        await loadCategoriesDropdown(); // Tải danh mục vào dropdown header
+        checkAuthStatus(); // Kiểm tra đăng nhập (để nút header đúng)
+      }
+
+      // Hàm gọi API lấy sản phẩm (có thể lọc theo category)
+      async function loadProducts(categoryId = null) {
+        const grid = document.getElementById("products-list-grid");
+        const pageTitle = document.getElementById("page-title");
+        let apiUrl = `${API_URL}/products.php?action=list`; // URL mặc định
+
+        if (categoryId) {
+          apiUrl += `&category_id=${categoryId}`; // Thêm filter nếu có categoryId
+          pageTitle.textContent = "Đang tải tên danh mục..."; // Tạm thời
+        }
+
+        if (!grid) return;
+        try {
+          const response = await apiFetch(apiUrl); // Dùng apiFetch
+          const result = await response.json();
+
+          if (result.status === "success") {
+            renderProducts(result.data, grid);
+            // Cập nhật lại title nếu lọc theo category
+            if (categoryId && result.data.length > 0) {
+              const categoryName = result.data[0].category_name; // Lấy tên từ sản phẩm đầu tiên
+              pageTitle.textContent = `Danh mục: ${categoryName}`;
+            } else if (categoryId) {
+              pageTitle.textContent = "Danh mục không tìm thấy";
+            } else {
+              pageTitle.textContent = "Tất cả Sản phẩm"; // Đặt lại title mặc định nếu không lọc
+            }
+          } else {
+            grid.innerHTML = `<p class="error-message">Lỗi: ${result.message}</p>`;
+          }
+        } catch (error) {
+          console.error("Fetch error (Products List):", error);
+          grid.innerHTML = `<p class="error-message">Không thể tải sản phẩm. Vui lòng thử lại sau.</p>`;
+        }
+      }
+
+      // Hàm render sản phẩm (Bản sửa lỗi ảnh)
+      function renderProducts(products, gridElement) {
+        gridElement.innerHTML = "";
+        if (products.length === 0) {
+          gridElement.innerHTML =
+            '<p style="text-align: center;">Không tìm thấy sản phẩm nào.</p>';
+          return;
+        }
+        products.forEach((product) => {
+          const productCard = document.createElement("div");
+          productCard.className = "product-card";
+          let priceHtml = `<span class="price">${formatCurrency(
+            product.price
+          )}</span>`;
+          if (product.sale_price && product.sale_price < product.price) {
+            priceHtml = `<span class="price">${formatCurrency(
+              product.sale_price
+            )}</span>
+                                 <span class="price sale">${formatCurrency(
+                                   product.price
+                                 )}</span>`;
+          }
+
+          let imagePath = product.image;
+          if (
+            imagePath &&
+            typeof imagePath === "string" &&
+            !imagePath.startsWith("products/")
+          ) {
+            imagePath = "products/" + imagePath; // Thêm 'products/' nếu thiếu
+          } else if (!imagePath) {
+            imagePath = "placeholder.jpg"; // Hoặc ảnh mặc định nếu không có ảnh
+          }
+          const imageSrc = `../uploads/${imagePath}`;
+
+          productCard.innerHTML = `
+                      <a href="product-detail.html?slug=${product.slug}">
+                           <img src="${imageSrc}" alt="${product.name}" onerror="this.onerror=null; this.src='../uploads/placeholder.jpg'; this.style.objectFit='contain';"> </a>
+                      <h3><a href="product-detail.html?slug=${product.slug}">${product.name}</a></h3>
+                      <p class="category-name">${product.category_name}</p>
+                      <div class="price-container">${priceHtml}</div>
+                      <button class="btn btn-primary add-to-cart-btn" data-product-id="${product.id}" data-product-name="${product.name}">Thêm vào giỏ</button>
+                      `;
+          gridElement.appendChild(productCard);
+        });
+
+        // *** GỌI HÀM GẮN SỰ KIỆN SAU KHI RENDER ***
+        attachAddToCartEvents();
+      }
+
+      // *** HÀM GẮN SỰ KIỆN (COPY TỪ index.html) ***
+      function attachAddToCartEvents() {
+        const addToCartButtons = document.querySelectorAll(".add-to-cart-btn");
+        addToCartButtons.forEach((button) => {
+          // Gỡ listener cũ nếu có để tránh gắn nhiều lần
+          button.removeEventListener("click", handleAddToCartClick);
+          // Gắn listener mới
+          button.addEventListener("click", handleAddToCartClick);
+        });
+      }
+
+      // *** HÀM XỬ LÝ CLICK (COPY TỪ index.html) ***
+      async function handleAddToCartClick(e) {
+        const button = e.target; // Lấy nút được click
+        const productId = button.dataset.productId;
+        const productName = button.dataset.productName;
+
+        // Thay đổi text nút tạm thời
+        const originalText = button.innerHTML;
+        button.innerHTML = "Đang thêm...";
+        button.disabled = true;
+
+        // Gọi API thêm vào giỏ
+        try {
+          const response = await apiFetch(`${API_URL}/cart.php?action=add`, {
+            method: "POST",
+            body: { product_id: productId, quantity: 1 }, // Thêm 1 sản phẩm
+          });
+          const result = await response.json();
+
+          if (result.status === "success") {
+            alert(`Đã thêm "${productName}" vào giỏ hàng!`);
+          } else if (response.status === 401) {
+            // Lỗi chưa đăng nhập
+            alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+            window.location.href = "login.html"; // Chuyển đến trang đăng nhập
+          } else {
+            alert(`Lỗi khi thêm vào giỏ: ${result.message}`);
+          }
+        } catch (error) {
+          console.error("Lỗi khi thêm vào giỏ:", error);
+          alert("Đã xảy ra lỗi kết nối. Vui lòng thử lại.");
+        } finally {
+          // Trả lại trạng thái nút sau khi xử lý xong
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
+      }
+
+      // --- Các hàm copy từ index.html (loadCategoriesDropdown, checkAuthStatus, handleLogout) ---
+      async function loadCategoriesDropdown() {
+        const dropdownContent = document.getElementById("category-dropdown");
+        if (!dropdownContent) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          loadCategoriesDropdown();
+          return;
+        }
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            dropdownContent.innerHTML = "";
+            result.data.forEach((category) => {
+              const link = document.createElement("a");
+              link.href = `products.html?category_id=${category.id}`;
+              link.textContent = category.name;
+              dropdownContent.appendChild(link);
+            });
+          } else {
+            dropdownContent.innerHTML =
+              '<a href="#">Không có danh mục nào.</a>';
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải danh mục:", error);
+          dropdownContent.innerHTML = '<a href="#">Lỗi tải danh mục.</a>';
+        }
+      }
+      async function checkAuthStatus() {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+
+        if (!authLink || !userMenu) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          checkAuthStatus();
+          return;
+        }
+
+        try {
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          if (result.status === "success" && result.user) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              result.user.full_name || result.user.email;
+
+            if (logoutButton && !logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+          } else {
+            authLink.style.display = "flex";
+            userMenu.style.display = "none";
+          }
+        } catch (error) {
+          console.error("Lỗi khi kiểm tra trạng thái đăng nhập:", error);
+          authLink.style.display = "flex";
+          userMenu.style.display = "none";
+        }
+      }
+      async function handleLogout(e) {
+        e.preventDefault();
+        try {
+          const logoutResponse = await apiFetch(
+            `${API_URL}/auth.php?action=logout`,
+            { method: "POST" }
+          );
+          const logoutResult = await logoutResponse.json();
+          if (logoutResult.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.reload();
+          } else {
+            alert("Đăng xuất thất bại: " + logoutResult.message);
+          }
+        } catch (error) {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      // Chạy hàm init khi trang tải xong
+      document.addEventListener("DOMContentLoaded", initProductsPage);
+    </script>
+  </body>
+</html>

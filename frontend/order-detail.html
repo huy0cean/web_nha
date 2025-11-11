@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chi tiết đơn hàng - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.10" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <h2 id="page-title">Chi tiết đơn hàng</h2>
+
+        <div class="breadcrumbs">
+          <a href="index.html">Trang chủ</a> /
+          <a href="profile.html">Tài khoản</a> /
+          <span>Chi tiết đơn hàng</span>
+        </div>
+
+        <div class="order-detail-container" id="order-detail-content">
+          <p>Đang tải chi tiết đơn hàng...</p>
+        </div>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+
+    <script>
+      // Hàm chạy khi trang tải xong
+      async function initOrderDetailPage() {
+        console.log("Đang khởi tạo trang chi tiết đơn hàng...");
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get("id"); // Lấy id đơn hàng từ URL
+
+        if (!orderId) {
+          document.getElementById("order-detail-content").innerHTML =
+            '<p class="error-message text-center">Lỗi: Không tìm thấy ID đơn hàng trong URL.</p>';
+          document.title = "Lỗi - Nhà Thuốc GB";
+          return;
+        }
+
+        // Chạy các hàm global từ app.js
+        await loadOrderDetails(orderId);
+        await loadCategoriesDropdown(); // Tải danh mục cho header
+
+        // ✅ SỬA LỖI 1: Thêm 'await' ở đây
+        await checkAuthStatus(); // Kiểm tra đăng nhập
+      }
+
+      // Hàm gọi API lấy chi tiết đơn hàng
+      async function loadOrderDetails(orderId) {
+        const contentDiv = document.getElementById("order-detail-content");
+        if (!contentDiv) return;
+
+        try {
+          // Gọi API action=detail của customer (orders.php sẽ tự check user_id)
+          const response = await apiFetch(
+            `${API_URL}/orders.php?action=detail&id=${orderId}`
+          );
+          const result = await response.json();
+
+          if (result.status === "success" && result.data) {
+            renderOrderDetails(result.data, contentDiv);
+            document.title = `Đơn hàng ${result.data.order_code} - Nhà Thuốc GB`;
+            document.getElementById(
+              "page-title"
+            ).textContent = `Chi tiết đơn hàng #${result.data.order_code}`;
+          } else if (response.status === 401) {
+            redirectToLogin("Vui lòng đăng nhập để xem chi tiết đơn hàng.");
+          } else if (response.status === 404) {
+            contentDiv.innerHTML = `<p class="error-message text-center">Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn hàng này.</p>`;
+            document.title = "Không tìm thấy đơn hàng - Nhà Thuốc GB";
+          } else {
+            contentDiv.innerHTML = `<p class="error-message text-center">Lỗi tải chi tiết đơn hàng: ${result.message}</p>`;
+            document.title = "Lỗi - Nhà Thuốc GB";
+          }
+        } catch (error) {
+          console.error("Fetch error (Order Detail):", error);
+          contentDiv.innerHTML = `<p class="error-message text-center">Không thể tải chi tiết đơn hàng. Vui lòng thử lại sau.</p>`;
+          document.title = "Lỗi - Nhà Thuốc GB";
+        }
+      }
+
+      // Hàm render chi tiết đơn hàng ra HTML
+      function renderOrderDetails(order, container) {
+        if (!container) return;
+
+        // Chuyển đổi trạng thái
+        let statusText = order.status;
+        switch (order.status) {
+          case "pending":
+            statusText = "Chờ xác nhận";
+            break;
+          case "confirmed":
+            statusText = "Đã xác nhận";
+            break;
+          case "shipping":
+            statusText = "Đang giao";
+            break;
+          case "completed":
+            statusText = "Đã giao";
+            break;
+          case "cancelled":
+            statusText = "Đã hủy";
+            break;
+        }
+        const orderDate = new Date(order.created_at).toLocaleString("vi-VN"); // Thêm giờ phút
+
+        let itemsHtml = `
+                <h4>Các sản phẩm trong đơn</h4>
+                <table class="order-items-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đơn giá</th>
+                            <th>Số lượng</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+        if (order.items && order.items.length > 0) {
+          order.items.forEach((item) => {
+            // Xử lý ảnh item (giả sử backend trả về đường dẫn đúng)
+            let itemImagePath = item.product_image;
+            if (
+              itemImagePath &&
+              typeof itemImagePath === "string" &&
+              !itemImagePath.startsWith("products/")
+            ) {
+              itemImagePath = "products/" + itemImagePath;
+            } else if (!itemImagePath) {
+              itemImagePath = "placeholder.jpg";
+            }
+            const itemImageSrc = `../uploads/${itemImagePath}`;
+
+            itemsHtml += `
+                        <tr>
+                            <td class="product-info">
+                                <img src="${itemImageSrc}" alt="${
+              item.product_name
+            }" width="50" onerror="this.onerror=null; this.src='../uploads/placeholder.jpg';">
+                                <span>${item.product_name}</span>
+                            </td>
+                            <td>${formatCurrency(item.price)}</td>
+                            <td>${item.quantity}</td>
+                            <td>${formatCurrency(item.subtotal)}</td>
+                        </tr>
+                    `;
+          });
+        } else {
+          itemsHtml += `<tr><td colspan="4" class="text-center">Không có sản phẩm trong đơn hàng này.</td></tr>`;
+        }
+
+        itemsHtml += `</tbody></table>`;
+
+        container.innerHTML = `
+                <div class="order-summary-header">
+                    <div>
+                        <p><strong>Mã đơn hàng:</strong> ${order.order_code}</p>
+                        <p><strong>Ngày đặt:</strong> ${orderDate}</p>
+                    </div>
+                    <div>
+                        <p><strong>Trạng thái:</strong> <span class="order-status status-${
+                          order.status
+                        }">${statusText}</span></p>
+                    </div>
+                </div>
+
+                <div class="order-detail-grid">
+                    <div class="order-section customer-info">
+                        <h4>Thông tin người nhận</h4>
+                        <p><strong>Họ tên:</strong> ${order.customer_name}</p>
+                        <p><strong>Số điện thoại:</strong> ${
+                          order.customer_phone
+                        }</p>
+                        ${
+                          order.customer_email
+                            ? `<p><strong>Email:</strong> ${order.customer_email}</p>`
+                            : ""
+                        }
+                        <p><strong>Địa chỉ:</strong> ${order.address}</p>
+                         ${
+                           order.note
+                             ? `<p><strong>Ghi chú:</strong> ${order.note}</p>`
+                             : ""
+                         }
+                    </div>
+                    <div class="order-section payment-info">
+                        <h4>Thông tin thanh toán</h4>
+                        <p><strong>Phương thức:</strong> ${
+                          order.payment_method === "cod"
+                            ? "Thanh toán khi nhận hàng (COD)"
+                            : "Chuyển khoản ngân hàng"
+                        }</p>
+                        <p><strong>Tổng tiền hàng:</strong> ${formatCurrency(
+                          order.total_amount
+                        )}</p>
+                        <p><strong>Phí vận chuyển:</strong> ${formatCurrency(
+                          0
+                        )} (Tạm tính)</p>
+                        <p><strong>Tổng cộng:</strong> <span class="order-grand-total">${formatCurrency(
+                          order.total_amount
+                        )}</span></p>
+                    </div>
+                </div>
+
+                <div class="order-section order-items">
+                    ${itemsHtml}
+                </div>
+
+                ${
+                  order.status === "pending"
+                    ? `
+                <div class="order-actions">
+                     <button class="btn btn-danger btn-sm" id="cancel-order-btn" data-order-id="${order.id}">Hủy đơn hàng</button>
+                </div>
+                `
+                    : ""
+                }
+            `;
+
+        // Gắn sự kiện cho nút Hủy (nếu có)
+        const cancelBtn = document.getElementById("cancel-order-btn");
+        if (cancelBtn) {
+          cancelBtn.addEventListener("click", handleCancelOrder);
+        }
+      }
+
+      // Hàm xử lý hủy đơn hàng
+      async function handleCancelOrder(event) {
+        const button = event.target;
+        const orderId = button.dataset.orderId;
+
+        if (
+          !confirm(
+            "Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác."
+          )
+        ) {
+          return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang hủy...';
+
+        try {
+          // Gọi API cập nhật trạng thái đơn hàng (backend cần có action=update_status cho user hoặc admin)
+          // Tạm thời dùng action=update_status của admin, nhưng backend cần kiểm tra user ID khớp
+          const response = await apiFetch(
+            `${API_URL}/orders.php?action=update_status`,
+            {
+              method: "POST",
+              body: { id: orderId, status: "cancelled" }, // Gửi trạng thái 'cancelled'
+            }
+          );
+          const result = await response.json();
+
+          if (result.status === "success") {
+            alert("Hủy đơn hàng thành công!");
+            // Tải lại chi tiết đơn hàng để cập nhật trạng thái
+            loadOrderDetails(orderId);
+          } else {
+            alert(`Lỗi khi hủy đơn hàng: ${result.message}`);
+            button.disabled = false;
+            button.innerHTML = "Hủy đơn hàng";
+          }
+        } catch (error) {
+          console.error("Lỗi khi hủy đơn hàng:", error);
+          alert("Lỗi kết nối khi hủy đơn hàng.");
+          button.disabled = false;
+          button.innerHTML = "Hủy đơn hàng";
+        }
+      }
+
+      // Hàm chuyển hướng về login (đã có trong app.js nhưng định nghĩa lại cho chắc)
+      // function redirectToLogin(message = "Vui lòng đăng nhập.") {
+      //   alert(message);
+      //   window.location.href = "login.html";
+      // }
+
+      // ✅ SỬA LỖI 2: Xóa các hàm rỗng bên dưới đi
+      // Chúng đã được tải từ app.js
+
+      // Chạy hàm init khi trang tải xong
+      document.addEventListener("DOMContentLoaded", initOrderDetailPage);
+    </script>
+  </body>
+</html>

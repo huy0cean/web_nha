@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thanh toán - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- bump version để tránh cache -->
+    <link rel="stylesheet" href="assets/css/style.css?v=2.1" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <h2>Thanh toán đơn hàng</h2>
+
+        <div class="breadcrumbs">
+          <a href="index.html">Trang chủ</a> /
+          <a href="cart.html">Giỏ hàng</a> /
+          <span>Thanh toán</span>
+        </div>
+
+        <div class="checkout-container">
+          <!-- FORM -->
+          <div class="checkout-form-section">
+            <h3>Thông tin giao hàng</h3>
+            <form id="checkout-form">
+              <div class="form-group">
+                <label for="customer_name"
+                  >Họ và tên <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="customer_name"
+                  name="customer_name"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="customer_phone"
+                  >Số điện thoại <span class="required">*</span></label
+                >
+                <input
+                  type="tel"
+                  id="customer_phone"
+                  name="customer_phone"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="customer_email">Email (Tùy chọn)</label>
+                <input type="email" id="customer_email" name="customer_email" />
+              </div>
+
+              <div class="address-row">
+                <div class="form-group">
+                  <label for="city"
+                    >Tỉnh/Thành phố <span class="required">*</span></label
+                  >
+                  <input type="text" id="city" name="city_province" required />
+                </div>
+                <div class="form-group">
+                  <label for="district"
+                    >Quận/Huyện <span class="required">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="district"
+                    name="district_town"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="street_address"
+                  >Địa chỉ cụ thể <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="street_address"
+                  name="street_address"
+                  placeholder="Ví dụ: 123 Đường ABC, Phường 1"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="note">Ghi chú đơn hàng (Tùy chọn)</label>
+                <textarea id="note" name="note" rows="2"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Phương thức thanh toán</label>
+
+                <div class="payment-method">
+                  <input
+                    type="radio"
+                    id="payment_cod"
+                    name="payment_method"
+                    value="cod"
+                    checked
+                  />
+                  <label for="payment_cod"
+                    ><i class="fas fa-truck"></i> Thanh toán khi nhận hàng
+                    (COD)</label
+                  >
+                </div>
+
+                <div class="payment-method">
+                  <input
+                    type="radio"
+                    id="payment_bank"
+                    name="payment_method"
+                    value="bank"
+                  />
+                  <label for="payment_bank"
+                    ><i class="fas fa-university"></i> Chuyển khoản ngân hàng
+                    (Quét mã QR)</label
+                  >
+                </div>
+
+                <div
+                  id="bank-transfer-info"
+                  class="bank-info-box"
+                  style="display: none"
+                >
+                  <p><strong>Quét mã QR để hoàn tất thanh toán:</strong></p>
+                  <div
+                    id="qr-code-container"
+                    style="
+                      text-align: center;
+                      margin: 20px 0;
+                      background: #fff;
+                      padding: 20px;
+                      border-radius: 10px;
+                    "
+                  >
+                    <img
+                      id="qr-code-image"
+                      src=""
+                      alt="QR Code Thanh toán"
+                      style="max-width: 300px; width: 100%; display: none"
+                    />
+                  </div>
+                  <p>
+                    <small style="color: #e74c3c; font-weight: bold">
+                      Lưu ý: Nội dung chuyển khoản đã được tự động điền vào mã
+                      QR.
+                    </small>
+                  </p>
+                </div>
+              </div>
+
+              <p id="checkout-message" class="form-message"></p>
+              <button type="submit" class="btn btn-primary btn-place-order">
+                <i class="fas fa-check-circle"></i> Đặt hàng
+              </button>
+            </form>
+          </div>
+
+          <!-- SUMMARY -->
+          <div class="checkout-summary-section">
+            <h3>Đơn hàng của bạn</h3>
+            <div id="checkout-cart-summary">
+              <p>Đang tải tóm tắt giỏ hàng...</p>
+            </div>
+            <div class="cart-summary checkout-total">
+              <div class="summary-row">
+                <span>Tạm tính</span><span id="checkout-subtotal">0₫</span>
+              </div>
+              <div class="summary-row">
+                <span>Phí vận chuyển</span
+                ><span id="checkout-shipping">Miễn phí (tạm tính)</span>
+              </div>
+              <div class="summary-row total">
+                <span>Tổng cộng</span><span id="checkout-total">0₫</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+      let currentCartItems = [];
+
+      document.addEventListener("DOMContentLoaded", initCheckoutPage);
+
+      async function initCheckoutPage() {
+        await loadCheckoutSummary();
+        await loadCategoriesDropdown();
+        await checkAuthStatus();
+        attachCheckoutFormEvent();
+      }
+
+      // ---------- Load giỏ hàng ----------
+      async function loadCheckoutSummary() {
+        const summaryDiv = document.getElementById("checkout-cart-summary");
+        const subtotalSpan = document.getElementById("checkout-subtotal");
+        const totalSpan = document.getElementById("checkout-total");
+        const placeOrderBtn = document.querySelector(".btn-place-order");
+
+        try {
+          const res = await apiFetch(`${API_URL}/cart.php?action=get`);
+          const result = await res.json();
+
+          if (result.status === "success" && result.data.length) {
+            currentCartItems = result.data;
+            renderCheckoutSummary(result.data, summaryDiv);
+            const subtotal = calculateSubtotal(result.data);
+            subtotalSpan.textContent = formatCurrency(subtotal);
+            totalSpan.textContent = formatCurrency(subtotal);
+          } else {
+            summaryDiv.innerHTML = `<p class="error-message">Giỏ hàng trống.</p>`;
+            placeOrderBtn.disabled = true;
+          }
+        } catch {
+          summaryDiv.innerHTML = `<p class="error-message">Không thể tải giỏ hàng.</p>`;
+        }
+      }
+
+      // Hiển thị items ở phần tóm tắt
+      function renderCheckoutSummary(items, container) {
+        let html = '<ul class="checkout-item-list">';
+        items.forEach((it) => {
+          const price = Number(it.sale_price || it.price);
+          html += `
+            <li>
+              <span class="item-name">${it.name} <span class="item-qty">x ${
+            it.quantity
+          }</span></span>
+              <span class="item-price">&nbsp;${formatCurrency(
+                price * it.quantity
+              )}</span>
+            </li>`;
+        });
+        html += "</ul>";
+        container.innerHTML = html;
+      }
+
+      function calculateSubtotal(items) {
+        return items.reduce(
+          (t, i) => t + Number(i.sale_price || i.price) * Number(i.quantity),
+          0
+        );
+      }
+
+      // ---------- Sinh QR (dùng số tiền VND chuẩn hoá) ----------
+      function generateQRCode(orderCode, amountVND) {
+        const qrContainer = document.getElementById("qr-code-container");
+        if (!qrContainer) return;
+
+        const BANK_ID = "970422";
+        const ACCOUNT_NO = "4888888882004";
+        const ACCOUNT_NAME = "DINH GIA BAO";
+        const transferMessage = `Thanh toan DH ${orderCode}`;
+
+        // Ép về số nguyên VND
+        const numericAmount = Math.round(Number(amountVND));
+
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+          qrContainer.innerHTML = `
+            <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:10px;padding:20px;text-align:center;">
+              <i class="fas fa-exclamation-circle" style="font-size:48px;color:#721c24;"></i>
+              <p style="margin-top:15px;color:#721c24;font-weight:bold;">Lỗi tạo QR Code</p>
+              <p style="color:#721c24;margin-top:10px;">Số tiền không hợp lệ (${amountVND}). Vui lòng kiểm tra lại đơn hàng.</p>
+            </div>`;
+          return;
+        }
+
+        const qrUrl =
+          `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png` +
+          `?amount=${numericAmount}` +
+          `&addInfo=${encodeURIComponent(transferMessage)}` +
+          `&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+
+        qrContainer.innerHTML = `
+          <div id="qr-loading-spinner"><i class="fas fa-spinner fa-spin" style="font-size:40px"></i>
+          <p>Đang tạo mã QR...</p></div>
+          <img id="qr-code-image" style="max-width:300px;width:100%;display:none" />
+        `;
+
+        const img = qrContainer.querySelector("#qr-code-image");
+        const spinner = qrContainer.querySelector("#qr-loading-spinner");
+
+        const loadTimeout = setTimeout(() => {
+          spinner?.remove();
+          qrContainer.innerHTML += `<p style="color:#856404">Không thể tải mã QR. Lỗi Timeout.</p>`;
+        }, 6000);
+
+        img.onload = () => {
+          clearTimeout(loadTimeout);
+          spinner?.remove();
+          img.style.display = "block";
+        };
+        img.onerror = () => {
+          clearTimeout(loadTimeout);
+          spinner?.remove();
+          qrContainer.innerHTML += `<p style="color:#856404">Không tải được mã QR. Kiểm tra AdBlock.</p>`;
+        };
+
+        img.src = qrUrl;
+      }
+
+      // ---------- Submit đơn hàng ----------
+      function attachCheckoutFormEvent() {
+        if (window.__checkoutBound) return;
+        window.__checkoutBound = true;
+
+        const form = document.getElementById("checkout-form");
+        const msg = document.getElementById("checkout-message");
+        const bankDiv = document.getElementById("bank-transfer-info");
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          msg.style.color = "";
+          msg.textContent = "Đang xử lý đơn hàng...";
+
+          const data = new FormData(form);
+          const dataToSend = {
+            customer_name: data.get("customer_name"),
+            customer_phone: data.get("customer_phone"),
+            customer_email: data.get("customer_email"),
+            address: `${data.get("street_address")}, ${data.get(
+              "district_town"
+            )}, ${data.get("city_province")}`,
+            note: data.get("note"),
+            payment_method: data.get("payment_method"),
+            items: currentCartItems,
+          };
+
+          try {
+            const res = await apiFetch(`${API_URL}/orders.php?action=create`, {
+              method: "POST",
+              body: dataToSend,
+            });
+            const result = await res.json();
+
+            if (result.status === "success") {
+              const id = result.order_id;
+              const code = result.order_code;
+              let amountFromAPI = Number(result.total_amount); // có thể đang là *100
+              const subtotalUI = calculateSubtotal(currentCartItems); // chuẩn VND
+
+              // --- CHUẨN HOÁ SỐ TIỀN ---
+              // 1) Nếu API trả về *100 so với UI, tự động chia 100
+              if (
+                Number.isFinite(amountFromAPI) &&
+                amountFromAPI === Math.round(subtotalUI * 100)
+              ) {
+                amountFromAPI = Math.round(amountFromAPI / 100);
+              }
+              // 2) Nếu API không hợp lệ, fallback dùng subtotal UI
+              if (!Number.isFinite(amountFromAPI) || amountFromAPI <= 0) {
+                amountFromAPI = Math.round(subtotalUI);
+              }
+              // 3) Nếu lệch quá lớn so với UI (>= 10 lần), giả định đơn vị sai -> chia 100
+              if (
+                amountFromAPI >= Math.round(subtotalUI * 10) &&
+                amountFromAPI % 100 === 0
+              ) {
+                amountFromAPI = Math.round(amountFromAPI / 100);
+              }
+
+              msg.style.color = "green";
+
+              if (dataToSend.payment_method === "bank") {
+                bankDiv.style.display = "block";
+                generateQRCode(code, amountFromAPI);
+
+                msg.innerHTML = `Đặt hàng thành công! Mã đơn hàng: <b>${code}</b><br>
+                  Vui lòng quét mã QR để hoàn tất thanh toán. <a href="order-detail.html?id=${id}">Xem đơn hàng</a>`;
+              } else {
+                msg.textContent =
+                  "Đặt hàng thành công! Đang chuyển tới chi tiết đơn hàng...";
+                setTimeout(
+                  () => (location.href = `order-detail.html?id=${id}`),
+                  2000
+                );
+              }
+
+              // Khoá form
+              form
+                .querySelectorAll("input, textarea, button")
+                .forEach((el) => (el.disabled = true));
+              const submitBtn = form.querySelector(".btn-place-order");
+              if (submitBtn)
+                submitBtn.innerHTML =
+                  '<i class="fas fa-check-circle"></i> Đã đặt hàng';
+            } else {
+              msg.textContent =
+                "Lỗi đặt hàng: " + (result.message || "Không rõ");
+              msg.style.color = "red";
+            }
+          } catch (err) {
+            msg.textContent = "Lỗi kết nối khi đặt hàng.";
+            msg.style.color = "red";
+            const submitBtn = form.querySelector(".btn-place-order");
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML =
+                '<i class="fas fa-check-circle"></i> Đặt hàng';
+            }
+          }
+        });
+      }
+
+      // ---------- Header: danh mục + auth ----------
+      async function loadCategoriesDropdown() {
+        const el = document.getElementById("category-dropdown");
+        if (!el) {
+          await new Promise((r) => setTimeout(r, 100));
+          return loadCategoriesDropdown();
+        }
+        try {
+          const res = await apiFetch(`${API_URL}/categories.php?action=list`);
+          const data = await res.json();
+          if (data.status === "success" && data.data) {
+            el.innerHTML = data.data
+              .map(
+                (c) =>
+                  `<a href="products.html?category_id=${c.id}">${c.name}</a>`
+              )
+              .join("");
+          } else {
+            el.innerHTML = "<a>Không có danh mục</a>";
+          }
+        } catch {
+          el.innerHTML = "<a>Lỗi tải danh mục</a>";
+        }
+      }
+
+      async function checkAuthStatus() {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+        if (!authLink || !userMenu) {
+          await new Promise((r) => setTimeout(r, 100));
+          return checkAuthStatus();
+        }
+        try {
+          const res = await apiFetch(
+            `${API_URL}/auth.php?action=check_customer`
+          );
+          const data = await res.json();
+
+          if (data.status !== "success") {
+            return redirectToLogin("Vui lòng đăng nhập để thanh toán");
+          }
+
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          if (userDisplayName && logoutButton) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              data.user.full_name || data.user.email;
+
+            if (!logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+          } else {
+            await new Promise((r) => setTimeout(r, 100));
+            return checkAuthStatus();
+          }
+
+          // Auto-fill
+          const nameInput = document.getElementById("customer_name");
+          const phoneInput = document.getElementById("customer_phone");
+          const emailInput = document.getElementById("customer_email");
+          if (nameInput && !nameInput.value && data.user.full_name)
+            nameInput.value = data.user.full_name;
+          if (phoneInput && !phoneInput.value && data.user.phone)
+            phoneInput.value = data.user.phone;
+          if (emailInput && !emailInput.value && data.user.email)
+            emailInput.value = data.user.email;
+        } catch {
+          redirectToLogin("Lỗi xác thực.");
+        }
+      }
+
+      async function handleLogout(e) {
+        if (e) e.preventDefault();
+        try {
+          const res = await apiFetch(
+            `${API_URL}/auth.php?action=logout_customer`,
+            { method: "POST" }
+          );
+          const out = await res.json();
+          if (out.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.href = "index.html";
+          } else {
+            alert("Đăng xuất thất bại: " + out.message);
+          }
+        } catch {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      function redirectToLogin(message = "Vui lòng đăng nhập.") {
+        alert(message);
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>

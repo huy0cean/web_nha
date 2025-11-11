@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trang chủ - Nhà Thuốc GB</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/style.css?v=1.10" />
+  </head>
+  <body>
+    <div id="main-header"></div>
+
+    <main>
+      <div class="container">
+        <section class="hero-section">
+          <h1>Chăm sóc sức khỏe toàn diện</h1>
+          <p>
+            Cung cấp thuốc và sản phẩm y tế chất lượng cao với giá cả hợp lý
+          </p>
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Tìm kiếm thuốc, vitamin, dụng cụ y tế..."
+              id="home-search-input"
+            />
+            <button type="button" id="home-search-button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </section>
+
+        <section class="feature-cards">
+          <div class="feature-card">
+            <i class="fas fa-shipping-fast"></i>
+            <h3>Giao hàng nhanh</h3>
+            <p>Miễn phí ship từ 500.000đ</p>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Hàng chính hãng</h3>
+            <p>100% sản phẩm chính hãng</p>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-headset"></i>
+            <h3>Hỗ trợ 24/7</h3>
+            <p>Tư vấn miễn phí mọi lúc</p>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-undo-alt"></i>
+            <h3>Đổi trả dễ dàng</h3>
+            <p>Đổi trả trong vòng 7 ngày</p>
+          </div>
+        </section>
+
+        <section class="category-showcase">
+          <h2>Danh mục sản phẩm</h2>
+          <div id="category-boxes-grid" class="category-grid">
+            <p>Đang tải danh mục...</p>
+          </div>
+        </section>
+
+        <h2>Sản phẩm nổi bật</h2>
+        <div id="featured-products-grid" class="product-grid">
+          <p>Đang tải sản phẩm nổi bật...</p>
+        </div>
+
+        <section class="recent-posts-section">
+          <h2>Tin tức & Bài viết mới nhất</h2>
+          <div id="recent-posts-grid" class="posts-grid">
+            <p>Đang tải bài viết...</p>
+          </div>
+          <div class="view-all-posts">
+            <a href="blog.html" class="btn btn-outline-primary"
+              >Xem tất cả bài viết</a
+            >
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div id="main-footer"></div>
+
+    <script src="assets/js/app.js"></script>
+
+    <script>
+      // Run when homepage loads
+      async function initHome() {
+        console.log("Initializing homepage...");
+        await loadCategoryBoxes();
+        await loadFeaturedProducts();
+        await loadRecentPosts(); // Load recent blog posts
+        await loadCategoriesDropdown(); // Load categories into header dropdown
+        checkAuthStatus(); // Check login status for header
+      }
+
+      // Check login status and update header
+      async function checkAuthStatus() {
+        const authLink = document.getElementById("auth-link");
+        const userMenu = document.getElementById("user-menu");
+        // Wait for header elements to load
+        if (!authLink || !userMenu) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          checkAuthStatus();
+          return;
+        }
+
+        try {
+          const response = await apiFetch(`${API_URL}/auth.php?action=check`);
+          const result = await response.json();
+          const userDisplayName = document.getElementById("user-display-name");
+          const logoutButton = document.getElementById("logout-button");
+
+          // Wait for dropdown elements if user might be logged in
+          if (!userDisplayName || !logoutButton) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            checkAuthStatus(); // Retry
+            return;
+          }
+
+          if (result.status === "success" && result.user) {
+            authLink.style.display = "none";
+            userMenu.style.display = "flex";
+            userDisplayName.textContent =
+              result.user.full_name || result.user.email;
+            // Attach logout listener only once
+            if (!logoutButton.dataset.listenerAttached) {
+              logoutButton.addEventListener("click", handleLogout);
+              logoutButton.dataset.listenerAttached = "true";
+            }
+          } else {
+            authLink.style.display = "flex";
+            userMenu.style.display = "none";
+          }
+        } catch (error) {
+          console.error("Error checking auth status:", error);
+          // Show login link if error occurs
+          if (authLink) authLink.style.display = "flex";
+          if (userMenu) userMenu.style.display = "none";
+        }
+      }
+
+      // Handle user logout
+      async function handleLogout(e) {
+        e.preventDefault();
+        try {
+          const logoutResponse = await apiFetch(
+            `${API_URL}/auth.php?action=logout`,
+            { method: "POST" }
+          );
+          const logoutResult = await logoutResponse.json();
+          if (logoutResult.status === "success") {
+            alert("Đăng xuất thành công!");
+            window.location.reload();
+          } else {
+            alert("Đăng xuất thất bại: " + logoutResult.message);
+          }
+        } catch (error) {
+          alert("Lỗi kết nối khi đăng xuất.");
+        }
+      }
+
+      // Load category links into header dropdown
+      async function loadCategoriesDropdown() {
+        const dropdownContent = document.getElementById("category-dropdown");
+        if (!dropdownContent) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          loadCategoriesDropdown();
+          return;
+        }
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            dropdownContent.innerHTML = "";
+            result.data.forEach((category) => {
+              const link = document.createElement("a");
+              link.href = `products.html?category_id=${category.id}`;
+              link.textContent = category.name;
+              dropdownContent.appendChild(link);
+            });
+          } else {
+            dropdownContent.innerHTML =
+              '<a href="#">Không có danh mục nào.</a>';
+          }
+        } catch (error) {
+          console.error("Error loading categories:", error);
+          dropdownContent.innerHTML = '<a href="#">Lỗi tải danh mục.</a>';
+        }
+      }
+
+      // Load category boxes for the homepage section
+      async function loadCategoryBoxes() {
+        const grid = document.getElementById("category-boxes-grid");
+        if (!grid) return;
+        try {
+          const response = await apiFetch(
+            `${API_URL}/categories.php?action=list`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            grid.innerHTML = "";
+            result.data.forEach((category) => {
+              const categoryBox = document.createElement("a");
+              categoryBox.className = "category-box";
+              categoryBox.href = `products.html?category_id=${category.id}`;
+              categoryBox.innerHTML = `<i class="fas fa-pills"></i><h3>${category.name}</h3>`;
+              grid.appendChild(categoryBox);
+            });
+          } else {
+            grid.innerHTML = "<p>Không có danh mục nào.</p>";
+          }
+        } catch (error) {
+          console.error("Error loading category boxes:", error);
+          grid.innerHTML = "<p>Lỗi tải danh mục.</p>";
+        }
+      }
+
+      // Load featured products
+      async function loadFeaturedProducts() {
+        const grid = document.getElementById("featured-products-grid");
+        if (!grid) return;
+        try {
+          const response = await apiFetch(
+            `${API_URL}/products.php?action=list&featured=1&limit=8`
+          ); // Fetch 8
+          if (!response.ok) throw new Error("Network response was not ok");
+          const result = await response.json();
+          if (result.status === "success") {
+            renderProducts(result.data, grid);
+          } else {
+            grid.innerHTML = `<p class="error-message">Lỗi: ${result.message}</p>`;
+          }
+        } catch (error) {
+          console.error("Fetch error (Featured):", error);
+          grid.innerHTML = `<p class="error-message">Không thể tải sản phẩm nổi bật. Vui lòng thử lại sau.</p>`;
+        }
+      }
+
+      // Load recent blog posts
+      async function loadRecentPosts() {
+        const grid = document.getElementById("recent-posts-grid");
+        if (!grid) return;
+        try {
+          const response = await apiFetch(
+            `${API_URL}/posts.php?action=list&limit=3`
+          );
+          const result = await response.json();
+          if (result.status === "success" && result.data.length > 0) {
+            renderPosts(result.data, grid); // Use the general renderPosts function
+          } else {
+            grid.innerHTML = "<p>Chưa có bài viết nào.</p>";
+          }
+        } catch (error) {
+          console.error("Error loading recent posts:", error);
+          grid.innerHTML =
+            '<p class="error-message">Không thể tải bài viết.</p>';
+        }
+      }
+
+      // Render product cards to the grid
+      function renderProducts(products, gridElement) {
+        gridElement.innerHTML = "";
+        if (!products || products.length === 0) {
+          gridElement.innerHTML =
+            '<p style="text-align: center;">Không tìm thấy sản phẩm nào.</p>';
+          return;
+        }
+        products.forEach((product) => {
+          const productCard = document.createElement("div");
+          productCard.className = "product-card";
+          let priceHtml = `<span class="price">${formatCurrency(
+            product.price
+          )}</span>`;
+          if (product.sale_price && product.sale_price < product.price) {
+            priceHtml = `<span class="price">${formatCurrency(
+              product.sale_price
+            )}</span><span class="price sale">${formatCurrency(
+              product.price
+            )}</span>`;
+          }
+          let imagePath = product.image;
+          if (
+            imagePath &&
+            typeof imagePath === "string" &&
+            !imagePath.startsWith("products/")
+          ) {
+            imagePath = "products/" + imagePath;
+          } else if (!imagePath) {
+            imagePath = "placeholder.jpg";
+          }
+          const imageSrc = `../uploads/${imagePath}`;
+          productCard.innerHTML = `
+                      <a href="product-detail.html?slug=${product.slug}">
+                          <img src="${imageSrc}" alt="${
+            product.name
+          }" onerror="this.onerror=null; this.src='../uploads/placeholder.jpg'; this.style.objectFit='contain';">
+                      </a>
+                      <h3><a href="product-detail.html?slug=${product.slug}">${
+            product.name
+          }</a></h3>
+                      <p class="category-name">${
+                        product.category_name || ""
+                      }</p>
+                      <div class="price-container">${priceHtml}</div>
+                      <button class="btn btn-primary add-to-cart-btn" data-product-id="${
+                        product.id
+                      }" data-product-name="${
+            product.name
+          }">Thêm vào giỏ</button>`;
+          gridElement.appendChild(productCard);
+        });
+        attachAddToCartEvents(); // Attach listeners after rendering
+      }
+
+      // Render post cards to the grid
+      function renderPosts(posts, gridElement) {
+        gridElement.innerHTML = "";
+        if (!posts || posts.length === 0) {
+          gridElement.innerHTML =
+            '<p style="text-align: center;">Không tìm thấy bài viết nào.</p>';
+          return;
+        }
+        posts.forEach((post) => {
+          const postCard = document.createElement("div");
+          postCard.className = "post-card";
+          let postImagePath = post.image;
+          if (
+            postImagePath &&
+            typeof postImagePath === "string" &&
+            !postImagePath.startsWith("posts/")
+          ) {
+            postImagePath = "posts/" + postImagePath;
+          } else if (!postImagePath) {
+            postImagePath = "placeholder.jpg";
+          }
+          const postImageSrc = `../uploads/${postImagePath}`;
+          const shortExcerpt = post.excerpt
+            ? post.excerpt.length > 100
+              ? post.excerpt.substring(0, 100) + "..."
+              : post.excerpt
+            : "Xem chi tiết...";
+          const postDate = new Date(post.created_at).toLocaleDateString(
+            "vi-VN"
+          );
+          postCard.innerHTML = `
+                    <a href="post-detail.html?slug=${post.slug}" class="post-image-link">
+                        <img src="${postImageSrc}" alt="${post.title}" onerror="this.onerror=null; this.src='../uploads/placeholder.jpg'; this.style.objectFit='cover';">
+                    </a>
+                    <div class="post-content">
+                        <p class="post-date"><i class="fas fa-calendar-alt"></i> ${postDate}</p>
+                        <h3><a href="post-detail.html?slug=${post.slug}">${post.title}</a></h3>
+                        <p class="post-excerpt">${shortExcerpt}</p>
+                        <a href="post-detail.html?slug=${post.slug}" class="read-more">Đọc thêm <i class="fas fa-arrow-right"></i></a>
+                    </div>`;
+          gridElement.appendChild(postCard);
+        });
+      }
+
+      // Attach event listeners to "Add to Cart" buttons
+      function attachAddToCartEvents() {
+        const addToCartButtons = document.querySelectorAll(".add-to-cart-btn");
+        addToCartButtons.forEach((button) => {
+          button.removeEventListener("click", handleAddToCartClick); // Prevent double listeners
+          button.addEventListener("click", handleAddToCartClick);
+        });
+      }
+
+      // Handle "Add to Cart" button click
+      async function handleAddToCartClick(e) {
+        const button = e.target;
+        const productId = button.dataset.productId;
+        const productName = button.dataset.productName;
+        const originalText = button.innerHTML;
+        button.innerHTML = "Đang thêm...";
+        button.disabled = true;
+        try {
+          const response = await apiFetch(`${API_URL}/cart.php?action=add`, {
+            method: "POST",
+            body: { product_id: productId, quantity: 1 },
+          });
+          const result = await response.json();
+          if (result.status === "success") {
+            alert(`Đã thêm "${productName}" vào giỏ hàng!`);
+          } else if (response.status === 401) {
+            alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+            window.location.href = "login.html";
+          } else {
+            alert(`Lỗi khi thêm vào giỏ: ${result.message}`);
+          }
+        } catch (error) {
+          console.error("Add to cart error:", error);
+          alert("Đã xảy ra lỗi kết nối. Vui lòng thử lại.");
+        } finally {
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
+      }
+
+      // Handle Back-to-Top button visibility
+      document.addEventListener("DOMContentLoaded", () => {
+        const backToTopButton = document.querySelector(".back-to-top");
+        if (backToTopButton) {
+          window.addEventListener("scroll", () => {
+            if (window.scrollY > 300) {
+              backToTopButton.classList.add("visible");
+            } else {
+              backToTopButton.classList.remove("visible");
+            }
+          });
+        }
+        // Call initHome if this is the homepage
+        if (document.getElementById("featured-products-grid")) {
+          initHome();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập Admin - Nhà Thuốc GB</title>
+    <link rel="stylesheet" href="../assets/css/admin.css?v=1.0" />
+  </head>
+  <body>
+    <div class="admin-login-container">
+      <form id="admin-login-form" class="auth-form">
+        <h2>Admin Đăng nhập</h2>
+        <p>Chào mừng đến trang quản trị</p>
+        <div class="form-group">
+          <label for="login-email">Email (admin)</label>
+          <input
+            type="email"
+            id="login-email"
+            name="email"
+            required
+            value="admin@gmail.com"
+          />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Mật khẩu</label>
+          <input type="password" id="login-password" name="password" required />
+        </div>
+        <p id="login-message" class="form-message"></p>
+        <button type="submit" class="btn btn-primary btn-full">
+          Đăng nhập
+        </button>
+      </form>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/admin.js"></script>
+  </body>
+</html>
